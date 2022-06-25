@@ -2,7 +2,8 @@ package com.cuonggm.send_command;
 
 import java.util.List;
 
-import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.SystemPropertyCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.ec2.Ec2Client;
 import software.amazon.awssdk.services.ec2.model.DescribeInstanceStatusRequest;
 import software.amazon.awssdk.services.ec2.model.DescribeInstanceStatusResponse;
@@ -13,13 +14,21 @@ public class ManipulateEc2 {
     public static void main(String[] args) {
         System.out.println("Start Manipulating");
 
+        // Setup credentials to access AWS Service
+        CredentialsProvider.setupAwsCredentials();
+
         String instanceId = PropertyReader.getProperty("config.properties", "manipulate_ec2.instance_id");
 
+        // Create EC2 Client
         Ec2Client client = Ec2Client.builder()
-            .credentialsProvider(ProfileCredentialsProvider.create())
+            .region(Region.US_EAST_1)
+            .credentialsProvider(SystemPropertyCredentialsProvider.create())
             .build();
 
+        // Manipulating
         startInstance(client, instanceId);
+        
+        // Check Instance Status
         while(true) {
             try {
                 Thread.sleep(3000);
