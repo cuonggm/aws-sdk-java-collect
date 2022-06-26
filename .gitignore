@@ -2,7 +2,7 @@
 # Compiled class file
 *.class
 
-/target
+*/target
 
 credentials.properties
 
@@ -29,6 +29,7 @@ hs_err_pid*
 replay_pid*
 
 ### VisualStudioCode ###
+.vscode/
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
