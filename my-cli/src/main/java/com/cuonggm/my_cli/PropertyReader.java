@@ -1,4 +1,4 @@
-package com.cuonggm.send_command;
+package com.cuonggm.my_cli;
 
 import java.io.IOException;
 import java.io.InputStream;

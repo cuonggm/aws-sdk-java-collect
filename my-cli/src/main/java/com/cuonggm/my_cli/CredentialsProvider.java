@@ -1,4 +1,4 @@
-package com.cuonggm.send_command;
+package com.cuonggm.my_cli;
 
 public class CredentialsProvider {
     

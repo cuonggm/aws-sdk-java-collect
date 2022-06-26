@@ -1,4 +1,4 @@
-package com.cuonggm.send_command;
+package com.cuonggm.my_cli;
 
 public class App {
     public static void main(String[] args) {
