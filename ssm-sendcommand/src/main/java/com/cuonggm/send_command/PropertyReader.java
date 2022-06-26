@@ -9,7 +9,7 @@ public class PropertyReader {
     public static String getProperty(String propertiesFile, String id) {
         String property = "";
 
-        try (InputStream input = App.class.getClassLoader().getResourceAsStream(propertiesFile)) {
+        try (InputStream input = PropertyReader.class.getClassLoader().getResourceAsStream(propertiesFile)) {
 
             Properties prop = new Properties();
 
