@@ -53,3 +53,6 @@ replay_pid*
 
 # Ignore code-workspaces
 *.code-workspace
+
+# Mac
+.DS_Store
