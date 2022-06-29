@@ -36,9 +36,9 @@ import software.amazon.awssdk.services.ecs.model.Task;
 import software.amazon.awssdk.services.ecs.model.TaskDefinition;
 
 /**
- * Hello world!
+ * RunTaskNewClusterAndTDefinition
  */
-public final class App {
+public final class RunTaskNewClusterAndTDefinition {
 
     // To specify ID
     private static final long currentTimeMillis = System.currentTimeMillis();
@@ -85,7 +85,7 @@ public final class App {
      */
     private static final String EXECUTION_ROLE_ARN = "arn:aws:iam::375395022000:role/RoleCreateLogGroupAndExecuteTask";
 
-    private App() {
+    private RunTaskNewClusterAndTDefinition() {
     }
 
     /**
