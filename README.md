@@ -3,8 +3,8 @@
 ## Git
 
 1. `git rm --cached <file>` : Remove file that was tracked in git
-
 2. `git rm -r --cached <folder>` : Remove folder that was tracked in git
+3. `git rebase -i HEAD~<number>` : Merge commits
 
 ## Docker
 
