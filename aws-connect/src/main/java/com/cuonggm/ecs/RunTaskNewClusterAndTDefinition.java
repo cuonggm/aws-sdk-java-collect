@@ -1,4 +1,4 @@
-package com.cuonggm;
+package com.cuonggm.ecs;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.cuonggm.utils.Property;
 
 import software.amazon.awssdk.auth.credentials.SystemPropertyCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
@@ -84,9 +86,6 @@ public final class RunTaskNewClusterAndTDefinition {
      * 2. ecsTaskExecutionRole
      */
     private static final String EXECUTION_ROLE_ARN = "arn:aws:iam::375395022000:role/RoleCreateLogGroupAndExecuteTask";
-
-    private RunTaskNewClusterAndTDefinition() {
-    }
 
     /**
      * Says hello to the world.

@@ -1,9 +1,11 @@
-package com.cuonggm;
+package com.cuonggm.ecs;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.cuonggm.utils.Property;
 
 import software.amazon.awssdk.auth.credentials.SystemPropertyCredentialsProvider;
 import software.amazon.awssdk.regions.Region;

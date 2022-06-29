@@ -1,4 +1,4 @@
-package com.cuonggm;
+package com.cuonggm.utils;
 
 import java.io.IOException;
 import java.io.InputStream;
