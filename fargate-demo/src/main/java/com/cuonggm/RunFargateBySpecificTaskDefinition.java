@@ -23,7 +23,7 @@ import software.amazon.awssdk.services.ecs.model.TaskDefinition;
 /**
  * RunFargateByTaskDefinition
  */
-public final class RunFargateByTaskDefinition {
+public final class RunFargateBySpecificTaskDefinition {
 
     // Specify subnet. No need specify VPC
     private static final List<String> SUBNETS = new ArrayList<String>() {{
@@ -66,7 +66,7 @@ public final class RunFargateByTaskDefinition {
             .build();
         // Create TaskDefinition
         TaskDefinition taskDefinition = TaskDefinition.builder()
-            .taskDefinitionArn("arn:aws:ecs:us-east-1:375395022000:task-definition/RunWithEvnVars:1")
+            .taskDefinitionArn("arn:aws:ecs:us-east-1:375395022000:task-definition/RunWithEvnVars:4")
             .build();
         // Create AwsVPCConfiguration
         AwsVpcConfiguration vpcConfiguration = AwsVpcConfiguration.builder()
