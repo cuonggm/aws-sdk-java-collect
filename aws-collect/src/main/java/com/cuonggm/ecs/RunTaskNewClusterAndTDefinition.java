@@ -1,15 +1,15 @@
 package com.cuonggm.ecs;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import com.cuonggm.utils.Property;
 
 import software.amazon.awssdk.auth.credentials.SystemPropertyCredentialsProvider;
+import software.amazon.awssdk.core.waiters.WaiterResponse;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.ecs.EcsClient;
 import software.amazon.awssdk.services.ecs.model.AssignPublicIp;
@@ -34,8 +34,8 @@ import software.amazon.awssdk.services.ecs.model.RegisterTaskDefinitionResponse;
 import software.amazon.awssdk.services.ecs.model.RunTaskRequest;
 import software.amazon.awssdk.services.ecs.model.RunTaskResponse;
 import software.amazon.awssdk.services.ecs.model.RuntimePlatform;
-import software.amazon.awssdk.services.ecs.model.Task;
 import software.amazon.awssdk.services.ecs.model.TaskDefinition;
+import software.amazon.awssdk.services.ecs.waiters.EcsWaiter;
 
 /**
  * RunTaskNewClusterAndTDefinition
@@ -76,9 +76,6 @@ public final class RunTaskNewClusterAndTDefinition {
     private static final List<String> SECURITY_GROUPS = new ArrayList<String>() {{
         add("sg-015cdc7fa41c0ff29");
     }};
-
-    // Sleep time between Loops (ms)
-    private static final long LOOP_SLEEP_TIME = 1000;
 
     /**
      * This role must have 2 policy:
@@ -189,32 +186,19 @@ public final class RunTaskNewClusterAndTDefinition {
         // Execute Run Task
         RunTaskResponse runTaskResponse = ecsClient.runTask(runTaskRequest);
         // Wait until running task successfully
-        // Get Task Refs
-        List<String> tasks = new ArrayList<>();
-        for(Task task : runTaskResponse.tasks()) {
-            System.out.println("Task: " + task.taskArn());
-            tasks.add(task.taskArn());
-        }
         DescribeTasksRequest describeTasksRequest = DescribeTasksRequest.builder()
-            .cluster(cluster.clusterArn())
-            .tasks(tasks)
+            .cluster(CLUSTER_NAME)
+            .tasks(runTaskResponse.tasks().get(0).taskArn())
             .build();
+        EcsWaiter waiter = ecsClient.waiter();
+        WaiterResponse<DescribeTasksResponse> dWaiterResponse = waiter.waitUntilTasksStopped(describeTasksRequest);
+        dWaiterResponse.matched().response().ifPresent(new Consumer<DescribeTasksResponse>() {
 
-        while(true) {
-            DescribeTasksResponse describeTasksResponse = ecsClient.describeTasks(describeTasksRequest);
-            String desiredStatus = describeTasksResponse.tasks().get(0).desiredStatus();
-            // Get current time
-            LocalDateTime time = LocalDateTime.now();
-            DateTimeFormatter formatter = DateTimeFormatter.ISO_TIME;
-            System.out.println(String.format("%s:\t%s", time.format(formatter), desiredStatus));
-            if(desiredStatus.equals("STOPPED")) {
-                break;
+            @Override
+            public void accept(DescribeTasksResponse t) {
+                System.out.println("Successfully Finished Task");
             }
-            try {
-                Thread.sleep(LOOP_SLEEP_TIME);
-            } catch (InterruptedException e) {
-                System.out.println(e.getMessage());
-            };
-        }
+            
+        });
     }
 }
