@@ -34,5 +34,8 @@ public class LaunchInstance {
             System.out.println("Public DNS: " + instance.publicDnsName());
             System.out.println("Private IP: " + instance.privateIpAddress());
             System.out.println("Private DNS: " + instance.privateDnsName());
+
+        // Check status
+        
     }
 }
