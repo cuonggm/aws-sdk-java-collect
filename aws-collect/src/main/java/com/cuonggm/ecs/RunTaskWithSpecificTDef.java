@@ -23,9 +23,9 @@ import software.amazon.awssdk.services.ecs.model.Task;
 import software.amazon.awssdk.services.ecs.model.TaskDefinition;
 
 /**
- * RunFargateByTaskDefinition
+ * RunTaskWithSpecificTDef
  */
-public final class RunFargateBySpecificTaskDefinition {
+public final class RunTaskWithSpecificTDef {
 
     // Specify subnet. No need specify VPC
     private static final List<String> SUBNETS = new ArrayList<String>() {{
