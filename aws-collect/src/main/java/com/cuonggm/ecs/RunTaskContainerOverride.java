@@ -1,14 +1,13 @@
 package com.cuonggm.ecs;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import com.cuonggm.utils.Property;
 
 import software.amazon.awssdk.auth.credentials.SystemPropertyCredentialsProvider;
-import software.amazon.awssdk.awscore.AwsRequestOverrideConfiguration;
+import software.amazon.awssdk.core.waiters.WaiterResponse;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.ecs.EcsClient;
 import software.amazon.awssdk.services.ecs.model.AssignPublicIp;
@@ -22,9 +21,9 @@ import software.amazon.awssdk.services.ecs.model.LaunchType;
 import software.amazon.awssdk.services.ecs.model.NetworkConfiguration;
 import software.amazon.awssdk.services.ecs.model.RunTaskRequest;
 import software.amazon.awssdk.services.ecs.model.RunTaskResponse;
-import software.amazon.awssdk.services.ecs.model.Task;
 import software.amazon.awssdk.services.ecs.model.TaskDefinition;
 import software.amazon.awssdk.services.ecs.model.TaskOverride;
+import software.amazon.awssdk.services.ecs.waiters.EcsWaiter;
 
 /**
  * App
@@ -42,6 +41,15 @@ public final class RunTaskContainerOverride {
         add(KeyValuePair.builder().name("yyy").value("yyy").build());
         add(KeyValuePair.builder().name("zzz").value("zzz").build());
     }};
+
+    // Cluster ARN
+    private static final String CLUSTER_ARN = "arn:aws:ecs:us-east-1:375395022000:cluster/DemoFargateCluster";
+
+    // Task Definition ARN
+    private static final String TASK_DEFINITION_ARN = "arn:aws:ecs:us-east-1:375395022000:task-definition/RunWithNoVars:1";
+
+    // Task Definition Container Name
+    private static final String TASK_DEF_CONTAINER_NAME = "ContainerName";
 
     // Specify subnet. No need specify VPC
     private static final List<String> SUBNETS = new ArrayList<String>() {{
@@ -80,11 +88,11 @@ public final class RunTaskContainerOverride {
             .build();
         // Get Cluster
         Cluster cluster = Cluster.builder()
-            .clusterArn("arn:aws:ecs:us-east-1:375395022000:cluster/DemoFargateCluster")
+            .clusterArn(CLUSTER_ARN)
             .build();
         // Create TaskDefinition
         TaskDefinition taskDefinition = TaskDefinition.builder()
-            .taskDefinitionArn("arn:aws:ecs:us-east-1:375395022000:task-definition/RunWithEvnVars:4")
+            .taskDefinitionArn(TASK_DEFINITION_ARN)
             .build();
         // Create AwsVPCConfiguration
         AwsVpcConfiguration vpcConfiguration = AwsVpcConfiguration.builder()
@@ -98,6 +106,7 @@ public final class RunTaskContainerOverride {
             .build();
         // AwsRequestOverrideConfiguration
         ContainerOverride containerOverride = ContainerOverride.builder()
+            .name(TASK_DEF_CONTAINER_NAME)
             .environment(ENVIRONMENT_VARIABLES)
             .build();
         // TaskOverride
@@ -114,35 +123,23 @@ public final class RunTaskContainerOverride {
             .overrides(taskOverride)
             .build();
         // Execute Run Task
+        System.out.println("Run Task...");
         RunTaskResponse runTaskResponse = ecsClient.runTask(runTaskRequest);
         // Wait until running task successfully
-        // Get Task Refs
-        List<String> tasks = new ArrayList<>();
-        for(Task task : runTaskResponse.tasks()) {
-            System.out.println("Task: " + task.taskArn());
-            tasks.add(task.taskArn());
-        }
+        // Check status until become STOPPED
         DescribeTasksRequest describeTasksRequest = DescribeTasksRequest.builder()
             .cluster(cluster.clusterArn())
-            .tasks(tasks)
+            .tasks(runTaskResponse.tasks().get(0).taskArn())
             .build();
+        EcsWaiter waiter = ecsClient.waiter();
+        WaiterResponse<DescribeTasksResponse> wResponse = waiter.waitUntilTasksStopped(describeTasksRequest);
+        wResponse.matched().response().ifPresent(new Consumer<DescribeTasksResponse>() {
 
-        // Check status until become STOPPED
-        while(true) {
-            DescribeTasksResponse describeTasksResponse = ecsClient.describeTasks(describeTasksRequest);
-            String desiredStatus = describeTasksResponse.tasks().get(0).desiredStatus();
-            // Get current time
-            LocalDateTime time = LocalDateTime.now();
-            DateTimeFormatter formatter = DateTimeFormatter.ISO_TIME;
-            System.out.println(String.format("%s:\t%s", time.format(formatter), desiredStatus));
-            if(desiredStatus.equals("STOPPED")) {
-                break;
+            @Override
+            public void accept(DescribeTasksResponse t) {
+                System.out.println("Finished Task");
             }
-            try {
-                Thread.sleep(LOOP_SLEEP_TIME);
-            } catch (InterruptedException e) {
-                System.out.println(e.getMessage());
-            };
-        }
+            
+        });
     }
 }
