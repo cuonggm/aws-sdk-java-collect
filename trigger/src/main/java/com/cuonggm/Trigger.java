@@ -19,70 +19,79 @@ import software.amazon.awssdk.services.ssm.model.SendCommandRequest;
  */
 public class Trigger implements RequestHandler<SQSEvent, Void> {
 
+    // Prepare for SendCommandRequest
+    private static String instanceId = null;
+
     @Override
     public Void handleRequest(SQSEvent input, Context context) {
+        // Start App Log
+        System.out.println("\nSTART APP");
         // Get Env Vars
-        String envCommand = System.getenv("command");
-        // String envAccessKeyId = System.getProperty("accessKeyId");
-        // String envSecretAccessKey = System.getenv("secretAccessKey");
-        String envInstanceId = System.getenv("instanceId");
+        instanceId = System.getenv("instanceId");
 
-        // Check message
+        // Loop in messages
         List<SQSMessage> messages = input.getRecords();
         if (messages != null) {
             System.out.println("Count of Message: " + messages.size());
             for (SQSMessage message : messages) {
-                System.out.println("Message Name: " + message.getBody());
+                System.out.println("Message Body: " + message.getBody());
                 System.out.println("Count of Attributes: " + message.getAttributes().size());
                 for (String key : message.getAttributes().keySet()) {
                     String value = message.getAttributes().get(key);
-                    System.out.println(String.format("Key=%s,value=%s", key, value));
+                    System.out.println(String.format("Message Attribute: '%s'='%s'", key, value));
                 }
+                handleMessage(message);
             }
         }
+        System.out.println("END APP\n");
+        return null;
+    }
 
-        // Start App Log
-        System.out.println("Start App");
-        // Store Credentials
-        // System.out.println("Storing accessKeyId and secretAccessKey");
-        // Set accessKeyId
-        // System.setProperty("aws.accessKeyId", envAccessKeyId);
-        // Set secretAccessKey
-        // System.setProperty("aws.secretAccessKey", envSecretAccessKey);
-        // System.out.println("Store keypair successfully");
-        // Create Ec2Client
-        // Ec2Client client = Ec2Client.builder()
-        // .region(Region.US_EAST_1)
-        // .credentialsProvider(SystemPropertyCredentialsProvider.create())
-        // .build();
-
+    private static void handleMessage(SQSMessage message) {
+        // Get command
+        String cmd = message.getMessageAttributes().get("command").getStringValue();
+        // Get paramPrefix
+        String paramPrefix = message.getMessageAttributes().get("paramPrefix").getStringValue();
+        System.out.println("paramPrefix=" + paramPrefix);
+        // Get target attributes
+        Map<String, String> attributes = new HashMap<>();
+        for (String key : message.getMessageAttributes().keySet()) {
+            // Filter by paramPrefix
+            if (key.startsWith(paramPrefix)) {
+                attributes.put(key, message.getMessageAttributes().get(key).getStringValue());
+            }
+        }
+        // Create SsmClient. No need Credentials Provider
         SsmClient ssmClient = SsmClient.builder()
                 .region(Region.US_EAST_1)
-                // .credentialsProvider(EnvironmentVariableCredentialsProvider.create())
                 .build();
 
         DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE;
         LocalDateTime now = LocalDateTime.now();
 
+        // Setup envCommand with command params
+        for (String key : attributes.keySet()) {
+            String param = key + "|" + attributes.get(key);
+            cmd += " " + param;
+        }
+        // Trim result cmd
+        cmd = cmd.trim();
+        // Prepare params
         Map<String, List<String>> params = new HashMap<>();
         List<String> paramContent = new ArrayList<>();
         params.put("commands", paramContent);
-
         // Set command content
-        paramContent.add(envCommand);
+        paramContent.add(cmd);
 
         SendCommandRequest sendCommandRequest = SendCommandRequest.builder()
                 .documentName("AWS-RunShellScript")
-                .instanceIds(envInstanceId)
+                .instanceIds(instanceId)
                 .comment("Run at" + now.format(formatter))
                 .parameters(params)
                 .build();
         ssmClient.sendCommand(sendCommandRequest);
-        System.out.println(String.format("Ran command '%s' in instance '%s' at '%s'", envCommand, envInstanceId,
+        System.out.println(String.format("Ran command '%s' in instance '%s' at '%s'", cmd, instanceId,
                 now.format(formatter)));
-        System.out.println("End App");
-
-        return null;
     }
 
 }

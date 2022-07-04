@@ -170,7 +170,7 @@
               <goal>report</goal>
             </goals>
           </execution>
-          <execution>
+          <!-- <execution>
             <id>check-unit-test</id>
             <phase>test</phase>
             <goals>
@@ -216,7 +216,7 @@
                 </rule>
               </rules>
             </configuration>
-          </execution>
+          </execution> -->
         </executions>
       </plugin>
     </plugins>
