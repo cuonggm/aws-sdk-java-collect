@@ -3,6 +3,7 @@ package com.cuonggm;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,9 @@ import software.amazon.awssdk.services.ssm.model.SendCommandRequest;
  */
 public class Trigger implements RequestHandler<SQSEvent, Void> {
 
+    // paramPrefix Def
+    private static final String PARAM_PREFIX = "_";
+
     // Prepare for SendCommandRequest
     private static String instanceId = null;
 
@@ -28,7 +32,7 @@ public class Trigger implements RequestHandler<SQSEvent, Void> {
         System.out.println("\nSTART APP");
         // Get Env Vars
         instanceId = System.getenv("instanceId");
-
+        System.out.println("Instance ID: " + instanceId);
         // Loop in messages
         List<SQSMessage> messages = input.getRecords();
         if (messages != null) {
@@ -51,8 +55,9 @@ public class Trigger implements RequestHandler<SQSEvent, Void> {
         // Get command
         String cmd = message.getMessageAttributes().get("command").getStringValue();
         // Get paramPrefix
-        String paramPrefix = message.getMessageAttributes().get("paramPrefix").getStringValue();
-        System.out.println("paramPrefix=" + paramPrefix);
+        // String paramPrefix = message.getMessageAttributes().get("paramPrefix").getStringValue();
+        String paramPrefix = PARAM_PREFIX;
+        System.out.println("paramPrefix=" + "'" + paramPrefix + "'");
         // Get target attributes
         Map<String, String> attributes = new HashMap<>();
         for (String key : message.getMessageAttributes().keySet()) {
@@ -61,20 +66,23 @@ public class Trigger implements RequestHandler<SQSEvent, Void> {
                 attributes.put(key, message.getMessageAttributes().get(key).getStringValue());
             }
         }
+        // Sort attribute ASC
+        Object[] attributeKeys = attributes.keySet().toArray();
+        Arrays.sort(attributeKeys);
         // Create SsmClient. No need Credentials Provider
         SsmClient ssmClient = SsmClient.builder()
                 .region(Region.US_EAST_1)
                 .build();
-
         DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE;
         LocalDateTime now = LocalDateTime.now();
-
+        // Add paramPrefix
+        cmd += " " + "\"" + paramPrefix + "\"";
         // Setup envCommand with command params
-        for (String key : attributes.keySet()) {
-            String param = key + "|" + attributes.get(key);
-            cmd += " " + param;
+        for (Object key : attributeKeys) {
+            String param = key + "-" + attributes.get(key);
+            cmd += " " + "\"" + param + "\"";
         }
-        // Trim result cmd
+        // Trim last space
         cmd = cmd.trim();
         // Prepare params
         Map<String, List<String>> params = new HashMap<>();

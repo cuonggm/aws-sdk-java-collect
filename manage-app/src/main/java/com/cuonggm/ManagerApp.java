@@ -6,18 +6,16 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * Hello world!
+ * ManagerApp
  */
 public final class ManagerApp {
-    private ManagerApp() {
-    }
 
     /**
      * Says hello to the world.
      * @param args The arguments of the program.
      */
     public static void main(String[] args) {
-        System.out.println("Start App");
+        System.out.println("START APP");
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ISO_DATE_TIME;
         File file = new File("/home/ssm-user/" + now.format(formatter) + ".txt");
@@ -26,6 +24,6 @@ public final class ManagerApp {
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
-        System.out.println("End App");
+        System.out.println("END APP");
     }
 }
